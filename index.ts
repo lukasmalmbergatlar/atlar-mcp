@@ -405,9 +405,15 @@ server.tool(
 
 const httpMode = process.argv.includes("--http") || !!process.env.PORT;
 
+console.log(`[startup] mode=${httpMode ? "http" : "stdio"} PORT=${process.env.PORT ?? "(unset)"} ATLAR_API_URL=${process.env.ATLAR_API_URL ?? "(default)"}`);
+
 if (httpMode) {
   const PORT = parseInt(process.env.PORT ?? "3000", 10);
   const app = createMcpExpressApp({ host: "0.0.0.0" });
+
+  app.get("/", (_req, res) => {
+    res.json({ status: "ok", server: "Atlar Treasury MCP", version: "1.0.0" });
+  });
 
   app.post("/mcp", async (req, res) => {
     const server = createServer();
@@ -443,12 +449,12 @@ if (httpMode) {
     );
   });
 
-  app.listen(PORT, () => {
-    console.error(`Atlar MCP Server (HTTP) listening on http://localhost:${PORT}/mcp`);
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`[startup] Atlar MCP Server (HTTP) listening on 0.0.0.0:${PORT}`);
   });
 
   process.on("SIGINT", () => {
-    console.error("Shutting down...");
+    console.log("Shutting down...");
     process.exit(0);
   });
 } else {
