@@ -20,7 +20,7 @@ if (!ATLAR_API_KEY || !ATLAR_API_SECRET) {
 }
 
 const atlarClient = axios.create({
-  baseURL: "https://api.atlar.com",
+  baseURL: process.env.ATLAR_API_URL ?? "https://api.atlar.com",
   auth: {
     username: ATLAR_API_KEY,
     password: ATLAR_API_SECRET,
