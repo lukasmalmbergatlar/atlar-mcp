@@ -7,7 +7,7 @@ import axios, { type AxiosError } from "axios";
 import { z } from "zod";
 import * as dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 const ATLAR_API_KEY = process.env.ATLAR_API_KEY;
 const ATLAR_API_SECRET = process.env.ATLAR_API_SECRET;
@@ -405,7 +405,7 @@ server.tool(
 
 const httpMode = process.argv.includes("--http") || !!process.env.PORT;
 
-console.log(`[startup] mode=${httpMode ? "http" : "stdio"} PORT=${process.env.PORT ?? "(unset)"} ATLAR_API_URL=${process.env.ATLAR_API_URL ?? "(default)"}`);
+console.error(`[startup] mode=${httpMode ? "http" : "stdio"} PORT=${process.env.PORT ?? "(unset)"} ATLAR_API_URL=${process.env.ATLAR_API_URL ?? "(default)"}`);
 
 if (httpMode) {
   const PORT = parseInt(process.env.PORT ?? "3000", 10);
