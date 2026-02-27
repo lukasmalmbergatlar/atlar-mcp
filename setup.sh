@@ -3,9 +3,21 @@ set -e
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_CONFIG="$HOME/Library/Application Support/Claude/claude_desktop_config.json"
-NODE_PATH="$(which node)"
+
+# Preflight: check for node and npm
+if ! command -v node &> /dev/null; then
+  echo "Error: Node.js is not installed. Install it from https://nodejs.org or via 'brew install node'."
+  exit 1
+fi
+if ! command -v npm &> /dev/null; then
+  echo "Error: npm is not installed."
+  exit 1
+fi
+
+NODE_PATH="$(command -v node)"
 
 echo "=== Atlar MCP Setup ==="
+echo "Using node: $NODE_PATH"
 echo ""
 
 # 1. Install dependencies and build
@@ -15,21 +27,15 @@ npm install --prefix "$REPO_DIR"
 echo "[2/3] Building..."
 npm run build --prefix "$REPO_DIR"
 
-# 2. Collect API credentials
+# 2. Collect API credentials (via env vars — interactive prompts don't work in Cursor/CI)
 echo ""
 echo "[3/3] Configuring Claude Desktop..."
 echo ""
 
-if [ -z "$ATLAR_API_KEY" ]; then
-  read -p "Atlar API Key: " ATLAR_API_KEY
-fi
-if [ -z "$ATLAR_API_SECRET" ]; then
-  read -s -p "Atlar API Secret: " ATLAR_API_SECRET
-  echo ""
-fi
-
 if [ -z "$ATLAR_API_KEY" ] || [ -z "$ATLAR_API_SECRET" ]; then
-  echo "Error: API key and secret are required."
+  echo "Error: ATLAR_API_KEY and ATLAR_API_SECRET must be set as environment variables."
+  echo ""
+  echo "Usage: ATLAR_API_KEY=your_key ATLAR_API_SECRET=your_secret ./setup.sh"
   exit 1
 fi
 

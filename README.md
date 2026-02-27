@@ -2,11 +2,16 @@
 
 MCP server that connects Claude Desktop to the Atlar Treasury API. Provides tools for accounts, transactions, forecasted transactions, estimates, and scenarios.
 
+## Prerequisites
+
+- **Node.js** (v18+) — install from [nodejs.org](https://nodejs.org) or `brew install node`
+- **Claude Desktop** — installed and opened at least once
+
 ## Quick Setup (via Cursor)
 
 Clone this repo, open it in Cursor, and paste this prompt:
 
-> Run `./setup.sh` to set up the Atlar MCP server for Claude Desktop. When it asks for credentials, use API key `YOUR_KEY` and secret `YOUR_SECRET`. After it finishes, restart Claude Desktop.
+> Clone https://github.com/lukasmalmbergatlar/atlar-mcp.git and open it. Then run `ATLAR_API_KEY=YOUR_KEY ATLAR_API_SECRET=YOUR_SECRET ./setup.sh` to install dependencies, build the project, and configure Claude Desktop. Once it's done, remind me to restart Claude Desktop.
 
 Replace `YOUR_KEY` and `YOUR_SECRET` with the actual Atlar API credentials.
 
