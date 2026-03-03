@@ -215,6 +215,47 @@ function summarizeScenarios(data: Record<string, unknown>): string {
   return JSON.stringify({ count: items.length, file: filePath, scenarios: rows, nextToken: nextToken || undefined });
 }
 
+function summarizeBalances(data: Record<string, unknown>): string {
+  const filePath = saveToDisk("balances", data);
+  const items = (data?.items as Array<Record<string, unknown>>) ?? [];
+  const nextToken = data?.nextToken as string | undefined;
+
+  if (items.length === 0) {
+    return JSON.stringify({ count: 0, file: filePath, message: "No balances found." });
+  }
+
+  const dates = items.map((b) => (b.localDate as string)).filter(Boolean).sort();
+
+  const byAccount: Record<string, { currency: string; latest: string; latestBalance: string; count: number }> = {};
+  for (const bal of items) {
+    const accId = (bal.accountId as string) || "unknown";
+    const amt = bal.amount as Record<string, unknown> | undefined;
+    const cur = (amt?.currency as string) || "???";
+    const val = (amt?.value as number) ?? 0;
+    const date = (bal.localDate as string) || "";
+
+    if (!byAccount[accId] || date > byAccount[accId].latest) {
+      byAccount[accId] = {
+        currency: cur,
+        latest: date,
+        latestBalance: fmtAmount(val, cur),
+        count: (byAccount[accId]?.count ?? 0) + 1,
+      };
+    } else {
+      byAccount[accId].count++;
+    }
+  }
+
+  return JSON.stringify({
+    count: items.length,
+    dateRange: dates.length > 0 ? [dates[0], dates[dates.length - 1]] : null,
+    accountSummaries: byAccount,
+    file: filePath,
+    hint: "Use read_saved_data to query individual balance entries (filter by date, account, etc.)",
+    nextToken: nextToken || undefined,
+  });
+}
+
 function createServer(): McpServer {
   return new McpServer({
     name: "Atlar Treasury MCP",
@@ -249,6 +290,56 @@ server.tool(
       return {
         content: [
           { type: "text", text: summarizeAccounts(response.data) },
+        ],
+      };
+    } catch (error) {
+      return {
+        content: [{ type: "text", text: formatError(error) }],
+        isError: true,
+      };
+    }
+  }
+);
+
+// ── Account Balances ─────────────────────────────────────────
+
+server.tool(
+  "get_account_balances",
+  `Retrieve historical balance entries for one or all accounts. Returns daily balance snapshots over time.
+  IMPORTANT: You must first call get_accounts to obtain account IDs, then pass an account ID here. Use '-' as the accountId to get balances across all accounts.
+  Balances are returned chronologically — use read_saved_data with sortBy/search to filter by date range or account after fetching.`,
+  {
+    accountId: z
+      .string()
+      .describe("Account ID to get balances for, or '-' for all accounts. Get IDs from get_accounts first."),
+    type: z
+      .enum(["BOOKED", "BOOKED_ADJUSTED", "AVAILABLE"])
+      .optional()
+      .describe("Balance type (default: BOOKED)"),
+    mostRecent: z
+      .boolean()
+      .optional()
+      .describe("If true, only return the most recent balance per account"),
+    limit: z
+      .number()
+      .min(1)
+      .max(500)
+      .optional()
+      .describe("Max balance entries to return (1-500, default 100)"),
+    token: z
+      .string()
+      .optional()
+      .describe("Pagination token from a previous response"),
+  },
+  async ({ accountId, type, mostRecent, limit, token }) => {
+    try {
+      const response = await atlarClient.get(
+        `/financial-data/v2/accounts/${accountId}/balances`,
+        { params: { type: type ?? "BOOKED", mostRecent, limit, token } }
+      );
+      return {
+        content: [
+          { type: "text", text: summarizeBalances(response.data) },
         ],
       };
     } catch (error) {

@@ -52,6 +52,7 @@ Restart Claude Desktop after saving.
 | Tool | Description |
 |------|-------------|
 | `get_accounts` | List bank accounts with balances |
+| `get_account_balances` | Get historical balance entries for an account (needs account ID from get_accounts) |
 | `list_entities` | List entities (companies/subsidiaries) |
 | `get_entity` | Get a single entity by ID |
 | `get_transactions` | List recent bank transactions |
