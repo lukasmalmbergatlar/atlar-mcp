@@ -9,6 +9,7 @@ import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import * as crypto from "crypto";
 
 dotenv.config({ quiet: true });
 
@@ -582,11 +583,11 @@ server.tool(
     originId: z
       .string()
       .optional()
-      .describe("Optional origin ID identifying where the forecast came from"),
+      .describe("Origin ID (UUID). Auto-generated if not provided."),
     originType: z
       .string()
       .optional()
-      .describe("Optional origin type (e.g. USER for manual input, or an integration type)"),
+      .describe("Origin type (default: USER)"),
     correctionType: z
       .enum(["", "INFLOW", "OUTFLOW"])
       .optional()
@@ -624,7 +625,7 @@ server.tool(
         amount: { currency, value: amountValue },
         date,
         description,
-        ...(originId || originType ? { origin: { id: originId ?? "", type: originType ?? "USER" } } : {}),
+        origin: { id: originId ?? crypto.randomUUID(), type: originType ?? "USER" },
         correctionType: correctionType ?? "",
       };
       if (scenarioId) payload.scenarioId = scenarioId;
