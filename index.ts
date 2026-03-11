@@ -581,10 +581,12 @@ server.tool(
     description: z.string().describe("Description of the forecasted transaction"),
     originId: z
       .string()
-      .describe("Origin ID identifying where the forecast came from"),
+      .optional()
+      .describe("Optional origin ID identifying where the forecast came from"),
     originType: z
       .string()
-      .describe("Origin type (e.g. USER for manual input, or an integration type)"),
+      .optional()
+      .describe("Optional origin type (e.g. USER for manual input, or an integration type)"),
     correctionType: z
       .enum(["", "INFLOW", "OUTFLOW"])
       .optional()
@@ -622,7 +624,7 @@ server.tool(
         amount: { currency, value: amountValue },
         date,
         description,
-        origin: { id: originId, type: originType },
+        ...(originId || originType ? { origin: { id: originId ?? "", type: originType ?? "USER" } } : {}),
         correctionType: correctionType ?? "",
       };
       if (scenarioId) payload.scenarioId = scenarioId;
